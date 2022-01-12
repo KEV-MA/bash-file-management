@@ -1,0 +1,66 @@
+#!/bin/bash
+
+year=()
+img_dim=("1080x1440" "1440x1080" "6720x4480" "4480x6720" "4000x3000" "4000x3000")
+scs_dim=("750x1334" "1334x750")
+
+find_d() {
+    file_meta="$(file $1)"
+    file_meta=${file_meta%,*}
+    file_meta=${file_meta##*, }
+    echo $file_meta
+}
+
+# loops through all files in directory
+IFS=$(echo -en "\n\b")
+for file in $(ls -p $1 | grep -v /)
+do
+    path="$1/$file"
+    file_year=$(date -r $path "+%Y")
+    file_ext="$(echo ${file[@]: -4} | sed 's/\.//' | tr '[:upper:]' '[:lower:]')"
+
+    file_dim=$(find_d $path)
+
+    # check if IMAGES directory exists and makes one if not
+    mkdir -p "$1/SAVED"
+    mkdir -p "$1/OTHER"
+
+    # check if there is directory for year
+    if [[ ! ${year[@]} =~ $file_year ]]
+    then
+        new_dir="$1/$file_year"
+        # create respective directories for year directory
+        # in current directory
+        mkdir -p $new_dir
+        mkdir -p "$new_dir/AUD"
+        mkdir -p "$new_dir/IMG"
+        mkdir -p "$new_dir/VID"
+        mkdir -p "$new_dir/SCS"
+
+        # add new year directory to year_dir array
+        year+=($new_year_dir)
+    fi
+
+    # check for file extension and sorts them accordingly
+    case $file_ext in
+        "png") mv_path="$1/$file_year/SCS";;
+        "heic") mv_path="$1/$file_year/IMG";;
+        "jpg"|"jpeg")
+            if [[ ${img_dim[@]} =~ $file_dim ]]
+            then
+                mv_path="$1/$file_year/IMG"
+            elif [[ ${scs_dim[@]} =~ $file_dim ]]
+            then
+                mv_path="$1/$file_year/SCS"
+            else
+                mv_path="$1/SAVED"
+            fi;;
+        "mp4"|"mov"|"gif") mv_path="$1/$file_year/VID";;
+        "mp3") mv_path="$1/$file_year/AUD";;
+        "webp") mv_path="$1/SAVED";;
+        *) mv_path="$1/OTHER";;
+    esac
+    mv $path $mv_path
+done
+
+

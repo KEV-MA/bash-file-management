@@ -1,0 +1,22 @@
+#!/bin/bash
+
+queue_i=0
+path=$1
+queue+=($path)
+
+for dir in ${queue[*]:queue_i}
+do
+    printf "$path\n" >> origin.txt
+    for item in $(ls "$path/$dir")
+    do   
+        if [[ -d $item]]
+        then
+            queue+=($item)
+        elif [[ -f $item ]]
+        then
+            printf "$item " >> origin.txt
+        fi
+    done
+    printf "\n" >> origin.txt
+    queue_i=$((queue_i+1))
+done
